@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Mercado de Fichajes</title>
+<style>
+  :root{
+    --grass-dark:#1b4d3e;
+    --grass:#2d6a4f;
+    --line:#f2f2ea;
+    --gold:#d4a537;
+    --ink:#12261f;
+    --card:#ffffff;
+    --muted:#5c6b64;
+    --danger:#c94b4b;
+  }
+  *{box-sizing:border-box;}
+
+  .site-nav{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    flex-wrap:wrap;
+    margin:0 auto 16px;
+    font-family:Arial,sans-serif;
+  }
+  .site-nav a{
+    display:inline-block;
+    text-decoration:none;
+    color:var(--line);
+    background:rgba(18,38,31,0.72);
+    border:1px solid rgba(212,165,55,0.7);
+    border-radius:7px;
+    padding:8px 13px;
+    font-size:0.8rem;
+    font-weight:700;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .site-nav a:hover{
+    background:var(--grass-dark);
+    transform:translateY(-1px);
+  }
+  .site-nav a.active{
+    background:var(--gold);
+    color:var(--ink);
+  }
+  body{
+    margin:0;
+    font-family:'Georgia','Times New Roman',serif;
+    background:
+      repeating-linear-gradient(
+        0deg,
+        var(--grass) 0px, var(--grass) 40px,
+        var(--grass-dark) 40px, var(--grass-dark) 80px
+      );
+    color:var(--ink);
+    min-height:100vh;
+    padding:20px 14px 60px;
+  }
+  .wrap{max-width:760px;margin:0 auto;}
+  h1{
+    font-size:1.5rem;
+    color:var(--line);
+    text-align:center;
+    margin:6px 0 2px;
+  }
+  .sub{
+    text-align:center;
+    color:var(--gold);
+    font-family:Arial,sans-serif;
+    font-size:0.8rem;
+    margin-bottom:18px;
+  }
+  #storage-notice{
+    display:none;background:#fff3cd;color:#7a5c00;font-family:Arial,sans-serif;
+    font-size:0.78rem;padding:8px 12px;border-radius:6px;margin-bottom:14px;text-align:center;
+  }
+  .card{
+    background:var(--card);
+    border-radius:6px;
+    box-shadow:0 6px 18px rgba(0,0,0,0.25);
+    padding:16px;
+    margin-bottom:18px;
+  }
+  .card h2{
+    font-size:1.05rem;
+    margin:0 0 12px;
+    color:var(--grass-dark);
+    border-bottom:2px solid var(--gold);
+    padding-bottom:6px;
+  }
+  .controls{
+    display:flex;
+    gap:8px;
+    margin-bottom:12px;
+    font-family:Arial,sans-serif;
+  }
+  .controls select{
+    flex:1;
+    padding:6px;
+    border-radius:4px;
+    border:1px solid #ccc;
+    font-size:0.82rem;
+  }
+  .player-row{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:9px 4px;
+    border-bottom:1px solid #eee;
+    font-family:Arial,sans-serif;
+  }
+  .player-row:last-child{border-bottom:none;}
+  .player-name{
+    font-weight:600;
+    font-size:0.92rem;
+    color:var(--ink);
+  }
+  .player-signed{
+    font-size:0.7rem;
+    color:var(--grass-dark);
+    font-weight:400;
+  }
+  .player-price{
+    font-weight:700;
+    color:var(--gold);
+    background:var(--grass-dark);
+    padding:2px 8px;
+    border-radius:12px;
+    font-size:0.78rem;
+    white-space:nowrap;
+  }
+  .row-right{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  select.team-select{
+    font-size:0.78rem;
+    padding:4px 6px;
+    border-radius:4px;
+    border:1px solid #ccc;
+    max-width:120px;
+  }
+  button.unsign{
+    background:var(--danger);
+    color:#fff;
+    border:none;
+    border-radius:4px;
+    padding:4px 8px;
+    font-size:0.7rem;
+    cursor:pointer;
+  }
+  .stat-block{
+    display:flex;
+    gap:10px;
+    font-family:Arial,sans-serif;
+  }
+  .stat{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:2px;
+  }
+  .stat-label{
+    font-size:0.62rem;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:0.3px;
+  }
+  .stat-controls{
+    display:flex;
+    align-items:center;
+    gap:4px;
+  }
+  .stat-controls button{
+    width:20px;
+    height:20px;
+    border-radius:50%;
+    border:1px solid #ccc;
+    background:#fff;
+    color:var(--grass-dark);
+    font-size:0.75rem;
+    line-height:1;
+    padding:0;
+    cursor:pointer;
+  }
+  .stat-value{
+    min-width:16px;
+    text-align:center;
+    font-weight:700;
+    font-size:0.82rem;
+    color:var(--ink);
+  }
+  .player-meta{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .squad .stat-tag{
+    font-size:0.72rem;
+    color:var(--muted);
+  }
+  .squad h3{
+    font-family:Arial,sans-serif;
+    font-size:0.9rem;
+    color:var(--grass-dark);
+    margin:0 0 6px;
+    display:flex;
+    justify-content:space-between;
+  }
+  .squad-total{
+    color:var(--gold);
+    background:var(--grass-dark);
+    padding:1px 7px;
+    border-radius:10px;
+    font-size:0.75rem;
+  }
+  .squad ul{
+    list-style:none;
+    margin:0;padding:0;
+    font-family:Arial,sans-serif;
+    font-size:0.82rem;
+  }
+  .squad li{
+    display:flex;
+    justify-content:space-between;
+    padding:4px 0;
+    border-bottom:1px dashed #eee;
+  }
+  .empty{
+    color:var(--muted);
+    font-style:italic;
+    font-size:0.8rem;
+  }
+  .footer-actions{text-align:center;margin-top:6px;}
+  .footer-actions button{
+    font-family:Arial,sans-serif;
+    background:transparent;
+    color:var(--line);
+    border:1px solid var(--line);
+    padding:8px 14px;
+    border-radius:4px;
+    font-size:0.82rem;
+    cursor:pointer;
+  }
+  .search-input{
+    width:100%;
+    padding:8px;
+    border-radius:4px;
+    border:1px solid #ccc;
+    font-family:Arial,sans-serif;
+    font-size:0.85rem;
+    margin-bottom:10px;
+  }
+  .compare-controls{
+    display:flex;
+    gap:8px;
+    margin-bottom:12px;
+    font-family:Arial,sans-serif;
+  }
+  .compare-controls select{
+    flex:1;
+    padding:6px;
+    border-radius:4px;
+    border:1px solid #ccc;
+    font-size:0.82rem;
+  }
+  .compare-table td, .compare-table th{
+    text-align:center;
+    padding:6px;
+  }
+  .fame-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    font-family:Arial,sans-serif;
+  }
+  .fame-box{
+    background:#f6f6f0;
+    border-radius:6px;
+    padding:10px;
+    text-align:center;
+  }
+  .fame-box .fame-label{font-size:0.65rem;color:var(--muted);text-transform:uppercase;}
+  .fame-box .fame-value{font-size:0.95rem;font-weight:700;color:var(--grass-dark);margin-top:2px;}
+  select.sale-select{
+    font-size:0.72rem;
+    padding:3px 4px;
+    border-radius:4px;
+    border:1px solid #ccc;
+    max-width:110px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="site-nav" aria-label="Navegación principal">
+    <a href="liga_tec.html">⚽ Liga</a>
+    <a href="mercado_fichajes-1.html" class="active">💰 Mercado de fichajes</a>
+  </nav>
+  <h1>Mercado de Fichajes</h1>
+  <div class="sub">Jugadores disponibles · precios en millones · cada equipo empieza con $10m</div>
+  <div style="text-align:center;color:var(--line);font-family:Arial,sans-serif;font-size:0.72rem;margin-bottom:10px;opacity:0.85;">
+    🔗 Datos compartidos: todos los que abran este enlace ven y editan lo mismo
+  </div>
+  <div id="storage-notice">El almacenamiento compartido no está disponible aquí; los cambios solo se guardarán en este dispositivo mientras la pestaña esté abierta.</div>
+
+  <div id="deadline-banner"></div>
+
+  <div class="card">
+    <h2>Ventana de fichajes</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;font-family:Arial,sans-serif;">
+      <input type="datetime-local" id="deadline-input" style="flex:1;min-width:180px;padding:6px;border-radius:4px;border:1px solid #ccc;">
+      <button id="save-deadline">Guardar fecha límite</button>
+      <button id="clear-deadline" style="background:var(--danger);">Quitar límite</button>
+    </div>
+  </div>
+
+  <div id="free-agent-banner"></div>
+
+  <div class="card">
+    <h2>Jugadores disponibles</h2>
+    <input type="text" id="search-input" class="search-input" placeholder="🔍 Buscar jugador por nombre...">
+    <div class="controls">
+      <select id="sort-select">
+        <option value="price-desc">Ordenar: precio (mayor a menor)</option>
+        <option value="price-asc">Ordenar: precio (menor a mayor)</option>
+        <option value="name">Ordenar: nombre (A-Z)</option>
+      </select>
+    </div>
+    <div id="players-list"></div>
+  </div>
+
+  <div class="card">
+    <h2>Plantillas por equipo</h2>
+    <div id="squads-list"></div>
+  </div>
+
+  <div class="card">
+    <h2>Tabla de goleo</h2>
+    <div id="scorers-list"></div>
+  </div>
+
+  <div class="card">
+    <h2>Ranking de gerentes</h2>
+    <div class="sub" style="margin-bottom:8px;color:var(--muted);">Quién arma el mejor equipo con lo que gasta</div>
+    <div id="managers-list"></div>
+  </div>
+
+  <div class="card">
+    <h2>Comparador de jugadores</h2>
+    <div class="compare-controls">
+      <select id="compare-a"></select>
+      <span style="align-self:center;color:var(--muted);">vs</span>
+      <select id="compare-b"></select>
+    </div>
+    <div id="compare-result"></div>
+  </div>
+
+  <div class="card">
+    <h2>Salón de la fama</h2>
+    <div id="fame-list" class="fame-grid"></div>
+  </div>
+
+  <div class="card">
+    <h2>Historial de transferencias</h2>
+    <div id="transfer-log-list"></div>
+  </div>
+
+  <div class="footer-actions">
+    <button id="refresh-btn">🔄 Actualizar</button>
+    <button id="reset-btn">Reiniciar mercado</button>
+  </div>
+</div>
+
+<script>
+const PLAYERS = [
+  {id:"yadiel", name:"Yadiel", price:0.5},
+  {id:"gustavo", name:"Gustavo", price:1},
+  {id:"joshua", name:"Joshua", price:3},
+  {id:"marcov", name:"Marcov", price:3},
+  {id:"kevin", name:"Kevin", price:4.5},
+  {id:"erik", name:"Erik", price:4},
+  {id:"aldo", name:"Aldo", price:5},
+  {id:"pepo", name:"Pepo", price:5},
+  {id:"alfredo", name:"Alfredo", price:6},
+  {id:"gael", name:"Gael", price:6},
+  {id:"johan", name:"Johan", price:8},
+  {id:"alejandra", name:"Alejandra", price:4.5},
+  {id:"edgar1", name:"Edgar", price:3},
+  {id:"zoe", name:"Zoe", price:3},
+  {id:"bryan", name:"Bryan", price:3.5},
+  {id:"luis", name:"Luis", price:3.5},
+  {id:"edgar2", name:"Edgar", price:6},
+  {id:"santiago", name:"Santiago", price:7}
+];
+
+const DEFAULT_SIGNINGS_RAW = {
+  yadiel: "La Real Hermandad",
+  gustavo: "Nose FC",
+  joshua: "Nose FC",
+  marcov: "Nose FC",
+  kevin: "Barcelona",
+  erik: "La Real Hermandad",
+  aldo: "Barcelona",
+  pepo: "La Real Hermandad",
+  alfredo: "CT",
+  gael: "Bryan FC",
+  johan: "Jung Tung Tungeitos",
+  alejandra: "Barcelona",
+  edgar1: "CT",
+  zoe: "CT",
+  bryan: "Bryan FC",
+  luis: "Bryan FC",
+  edgar2: "Jung Tung Tungeitos",
+  santiago: "Jung Tung Tungeitos"
+};
+
+function buildDefaultSignings(){
+  const out = {};
+  Object.entries(DEFAULT_SIGNINGS_RAW).forEach(([id, team]) => {
+    out[id] = {team, original: true};
+  });
+  return out;
+}
+
+const TEAMS = [
+  "La Real Hermandad",
+  "Barcelona",
+  "Jung Tung Tungeitos",
+  "CT",
+  "Nose FC",
+  "Bryan FC"
+];
+
+const TEAM_EMOJI = {
+  "La Real Hermandad": "🛡️",
+  "Barcelona": "🔴🔵",
+  "Jung Tung Tungeitos": "🐸",
+  "CT": "⚙️",
+  "Nose FC": "❓",
+  "Bryan FC": "⭐"
+};
+
+function teamBadge(team){
+  return TEAM_EMOJI[team] || "⚽";
+}
+
+const BUDGET = 10;
+
+const STORAGE_KEY = "mercado-fichajes-signings-v2";
+const STATS_STORAGE_KEY = "mercado-fichajes-stats-v1";
+const TRANSFER_LOG_KEY = "mercado-fichajes-transfer-log-v1";
+const CLAUSES_KEY = "mercado-fichajes-clauses-v1";
+const DEADLINE_KEY = "mercado-fichajes-deadline-v1";
+let storageAvailable = true;
+let signings = {}; // playerId -> {team, original}
+let stats = {}; // playerId -> {goals, assists}
+let transferLog = []; // {player, team, price, time}
+let clauses = {}; // playerId -> number
+let deadline = null; // ISO string or null
+
+function buildDefaultStats(){
+  const out = {};
+  PLAYERS.forEach(p => { out[p.id] = {goals: 0, assists: 0}; });
+  return out;
+}
+
+function showStorageNotice(){
+  const el = document.getElementById("storage-notice");
+  if(el) el.style.display = "block";
+}
+
+async function save(){
+  if(!storageAvailable) return;
+  try{
+    if(!window.storage){ storageAvailable = false; return; }
+    await window.storage.set(STORAGE_KEY, JSON.stringify(signings), true);
+  }catch(err){
+    storageAvailable = false;
+    showStorageNotice();
+  }
+}
+
+async function saveStats(){
+  if(!storageAvailable) return;
+  try{
+    if(!window.storage){ storageAvailable = false; return; }
+    await window.storage.set(STATS_STORAGE_KEY, JSON.stringify(stats), true);
+  }catch(err){
+    storageAvailable = false;
+    showStorageNotice();
+  }
+}
+
+async function load(){
+  try{
+    if(!window.storage){ storageAvailable = false; signings = buildDefaultSignings(); return; }
+    const res = await window.storage.get(STORAGE_KEY, true);
+    signings = res ? JSON.parse(res.value) : buildDefaultSignings();
+  }catch(err){
+    storageAvailable = false;
+    signings = buildDefaultSignings();
+    showStorageNotice();
+  }
+}
+
+async function loadStats(){
+  try{
+    if(!window.storage){ stats = buildDefaultStats(); return; }
+    const res = await window.storage.get(STATS_STORAGE_KEY, true);
+    stats = res ? JSON.parse(res.value) : buildDefaultStats();
+  }catch(err){
+    stats = buildDefaultStats();
+  }
+}
+
+async function saveTransferLog(){
+  if(!storageAvailable) return;
+  try{
+    if(!window.storage){ return; }
+    await window.storage.set(TRANSFER_LOG_KEY, JSON.stringify(transferLog), true);
+  }catch(err){
+    showStorageNotice();
+  }
+}
+
+async function loadTransferLog(){
+  try{
+    if(!window.storage){ transferLog = []; return; }
+    const res = await window.storage.get(TRANSFER_LOG_KEY, true);
+    transferLog = res ? JSON.parse(res.value) : [];
+  }catch(err){
+    transferLog = [];
+  }
+}
+
+async function saveClauses(){
+  if(!storageAvailable) return;
+  try{
+    if(!window.storage){ return; }
+    await window.storage.set(CLAUSES_KEY, JSON.stringify(clauses), true);
+  }catch(err){
+    showStorageNotice();
+  }
+}
+
+async function loadClauses(){
+  try{
+    if(!window.storage){ clauses = {}; return; }
+    const res = await window.storage.get(CLAUSES_KEY, true);
+    clauses = res ? JSON.parse(res.value) : {};
+  }catch(err){
+    clauses = {};
+  }
+}
+
+async function saveDeadline(){
+  if(!storageAvailable) return;
+  try{
+    if(!window.storage){ return; }
+    await window.storage.set(DEADLINE_KEY, JSON.stringify({deadline}), true);
+  }catch(err){
+    showStorageNotice();
+  }
+}
+
+async function loadDeadline(){
+  try{
+    if(!window.storage){ deadline = null; return; }
+    const res = await window.storage.get(DEADLINE_KEY, true);
+    deadline = res ? JSON.parse(res.value).deadline : null;
+  }catch(err){
+    deadline = null;
+  }
+}
+
+function isMarketClosed(){
+  if(!deadline) return false;
+  return new Date() > new Date(deadline);
+}
+
+function sortedPlayers(){
+  const mode = document.getElementById("sort-select").value;
+  const query = (document.getElementById("search-input").value || "").trim().toLowerCase();
+  let arr = [...PLAYERS];
+  if(query){
+    arr = arr.filter(p => p.name.toLowerCase().includes(query));
+  }
+  if(mode === "price-desc") arr.sort((a,b) => b.price - a.price);
+  else if(mode === "price-asc") arr.sort((a,b) => a.price - b.price);
+  else arr.sort((a,b) => a.name.localeCompare(b.name));
+  return arr;
+}
+
+function statControl(playerId, statKey, label){
+  const wrap = document.createElement("div");
+  wrap.className = "stat";
+  const labelEl = document.createElement("div");
+  labelEl.className = "stat-label";
+  labelEl.textContent = label;
+  const controls = document.createElement("div");
+  controls.className = "stat-controls";
+
+  const minusBtn = document.createElement("button");
+  minusBtn.textContent = "-";
+  minusBtn.addEventListener("click", async () => {
+    stats[playerId][statKey] = Math.max(0, stats[playerId][statKey] - 1);
+    await saveStats();
+    renderAll();
+  });
+
+  const valueEl = document.createElement("span");
+  valueEl.className = "stat-value";
+  valueEl.textContent = stats[playerId][statKey];
+
+  const plusBtn = document.createElement("button");
+  plusBtn.textContent = "+";
+  plusBtn.addEventListener("click", async () => {
+    stats[playerId][statKey] += 1;
+    await saveStats();
+    renderAll();
+  });
+
+  controls.appendChild(minusBtn);
+  controls.appendChild(valueEl);
+  controls.appendChild(plusBtn);
+  wrap.appendChild(labelEl);
+  wrap.appendChild(controls);
+  return wrap;
+}
+
+function renderPlayers(){
+  const list = document.getElementById("players-list");
+  list.innerHTML = "";
+  sortedPlayers().forEach(p => {
+    const signing = signings[p.id];
+    const signedTeam = signing ? signing.team : null;
+    const row = document.createElement("div");
+    row.className = "player-row";
+
+    const left = document.createElement("div");
+    left.className = "player-meta";
+    left.innerHTML = `<div class="player-name">${p.name}</div>` +
+      (signedTeam ? `<div class="player-signed">${teamBadge(signedTeam)} Fichado por ${signedTeam}${signing.original ? "" : " (nuevo)"}</div>` : "");
+
+    const statBlock = document.createElement("div");
+    statBlock.className = "stat-block";
+    statBlock.appendChild(statControl(p.id, "goals", "Goles"));
+    statBlock.appendChild(statControl(p.id, "assists", "Asist."));
+    left.appendChild(statBlock);
+
+    const right = document.createElement("div");
+    right.className = "row-right";
+
+    const priceTag = document.createElement("span");
+    priceTag.className = "player-price";
+    priceTag.textContent = p.price + "m";
+    right.appendChild(priceTag);
+
+    if(signedTeam){
+      const clauseWrap = document.createElement("div");
+      clauseWrap.style.cssText = "display:flex;flex-direction:column;align-items:center;font-size:0.65rem;color:var(--muted);";
+      const clauseLabel = document.createElement("span");
+      clauseLabel.textContent = "Cláusula $m";
+      const clauseInput = document.createElement("input");
+      clauseInput.type = "number";
+      clauseInput.min = "0";
+      clauseInput.step = "0.5";
+      clauseInput.value = clauses[p.id] || "";
+      clauseInput.style.cssText = "width:56px;padding:3px;font-size:0.75rem;text-align:center;";
+      clauseInput.placeholder = "-";
+      clauseInput.addEventListener("change", async (e) => {
+        const val = parseFloat(e.target.value);
+        if(!isNaN(val) && val > 0){
+          clauses[p.id] = val;
+        } else {
+          delete clauses[p.id];
+        }
+        await saveClauses();
+      });
+      clauseWrap.appendChild(clauseLabel);
+      clauseWrap.appendChild(clauseInput);
+      right.appendChild(clauseWrap);
+
+      if(!isMarketClosed()){
+        const tradeSel = document.createElement("select");
+        tradeSel.className = "sale-select";
+        const tOpt = document.createElement("option");
+        tOpt.value = "";
+        tOpt.textContent = "Canjear a...";
+        tradeSel.appendChild(tOpt);
+        TEAMS.filter(t => t !== signedTeam).forEach(t => {
+          const opt = document.createElement("option");
+          opt.value = t;
+          opt.textContent = t;
+          tradeSel.appendChild(opt);
+        });
+        tradeSel.addEventListener("change", async (e) => {
+          const newTeam = e.target.value;
+          if(!newTeam) return;
+          const remaining = teamRemaining(newTeam);
+          if(remaining < p.price){
+            alert(`${newTeam} no tiene presupuesto suficiente para recibir a ${p.name} en canje.`);
+            e.target.value = "";
+            return;
+          }
+          const fromTeam = signedTeam;
+          signings[p.id] = {team: newTeam, original: false};
+          transferLog.push({type:"canje", player: p.name, team: newTeam, fromTeam, price: p.price, time: new Date().toLocaleString('es-MX', {dateStyle:'short', timeStyle:'short'})});
+          await save();
+          await saveTransferLog();
+          renderAll();
+        });
+        right.appendChild(tradeSel);
+      }
+
+      const unsignBtn = document.createElement("button");
+      unsignBtn.className = "unsign";
+      if(signing.original){
+        unsignBtn.textContent = "Quitar";
+        unsignBtn.addEventListener("click", async () => {
+          delete signings[p.id];
+          await save();
+          renderAll();
+        });
+      } else {
+        unsignBtn.textContent = `Vender ($${p.price}m)`;
+        unsignBtn.addEventListener("click", async () => {
+          if(!confirm(`¿Vender a ${p.name}? ${signedTeam} recuperará $${p.price}m de presupuesto.`)) return;
+          delete signings[p.id];
+          transferLog.push({type:"venta", player: p.name, team: signedTeam, price: p.price, time: new Date().toLocaleString('es-MX', {dateStyle:'short', timeStyle:'short'})});
+          await save();
+          await saveTransferLog();
+          renderAll();
+        });
+      }
+      right.appendChild(unsignBtn);
+    } else {
+      const marketClosed = isMarketClosed();
+      const sel = document.createElement("select");
+      sel.className = "team-select";
+      sel.disabled = marketClosed;
+      const defaultOpt = document.createElement("option");
+      defaultOpt.value = "";
+      defaultOpt.textContent = marketClosed ? "Mercado cerrado" : "Fichar para...";
+      sel.appendChild(defaultOpt);
+      TEAMS.forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t;
+        const remaining = teamRemaining(t);
+        if(remaining < p.price){
+          opt.disabled = true;
+          opt.textContent = `${t} (sin presupuesto)`;
+        } else {
+          opt.textContent = t;
+        }
+        sel.appendChild(opt);
+      });
+      sel.addEventListener("change", async (e) => {
+        const chosenTeam = e.target.value;
+        if(!chosenTeam) return;
+        const remaining = teamRemaining(chosenTeam);
+        if(remaining < p.price){
+          alert(`${chosenTeam} ya no tiene presupuesto suficiente para fichar a ${p.name}.`);
+          e.target.value = "";
+          return;
+        }
+        signings[p.id] = {team: chosenTeam, original: false};
+        transferLog.push({player: p.name, team: chosenTeam, price: p.price, time: new Date().toLocaleString('es-MX', {dateStyle:'short', timeStyle:'short'})});
+        await save();
+        await saveTransferLog();
+        renderAll();
+      });
+      right.appendChild(sel);
+    }
+
+    row.appendChild(left);
+    row.appendChild(right);
+    list.appendChild(row);
+  });
+}
+
+function renderSquads(){
+  const container = document.getElementById("squads-list");
+  container.innerHTML = "";
+  TEAMS.forEach(team => {
+    const squadPlayers = PLAYERS.filter(p => signings[p.id] && signings[p.id].team === team);
+    const remaining = teamRemaining(team);
+    const noBudget = remaining <= 0;
+    const div = document.createElement("div");
+    div.className = "squad";
+    const badgeColor = noBudget ? "var(--danger)" : "var(--grass-dark)";
+    let html = `<h3>${teamBadge(team)} ${team} <span class="squad-total" style="background:${badgeColor}">$${remaining}m disponibles</span></h3>`;
+    if(noBudget){
+      html += `<div class="budget-status" style="color:var(--danger);font-size:0.75rem;margin:-4px 0 8px;">Sin presupuesto · no puede fichar más</div>`;
+    }
+    if(squadPlayers.length === 0){
+      html += `<div class="empty">Sin jugadores fichados</div>`;
+    } else {
+      html += "<ul>";
+      squadPlayers.forEach(p => {
+        const isNew = !signings[p.id].original;
+        const st = stats[p.id] || {goals:0, assists:0};
+        const clauseTag = clauses[p.id] ? ` · cláusula $${clauses[p.id]}m` : "";
+        html += `<li><span>${p.name}${isNew ? " 🆕" : ""} <span class="stat-tag">(${st.goals}G ${st.assists}A${clauseTag})</span></span><span>${p.price}m</span></li>`;
+      });
+      html += "</ul>";
+    }
+    div.innerHTML = html;
+    container.appendChild(div);
+  });
+}
+
+function renderScorers(){
+  const container = document.getElementById("scorers-list");
+  const rows = PLAYERS
+    .map(p => ({...p, ...(stats[p.id] || {goals:0, assists:0}), team: signings[p.id] ? signings[p.id].team : "Sin equipo"}))
+    .filter(p => p.goals > 0 || p.assists > 0)
+    .sort((a,b) => b.goals - a.goals || b.assists - a.assists);
+
+  if(rows.length === 0){
+    container.innerHTML = '<div class="empty">Aún no hay goles ni asistencias registrados</div>';
+    return;
+  }
+
+  let html = `<table style="width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:0.82rem;">
+    <thead><tr>
+      <th style="text-align:left;padding:6px 4px;color:var(--muted);border-bottom:1px solid #ddd;">Jugador</th>
+      <th style="padding:6px 4px;color:var(--muted);border-bottom:1px solid #ddd;">Equipo</th>
+      <th style="padding:6px 4px;color:var(--muted);border-bottom:1px solid #ddd;">G</th>
+      <th style="padding:6px 4px;color:var(--muted);border-bottom:1px solid #ddd;">A</th>
+    </tr></thead><tbody>`;
+  rows.forEach(p => {
+    html += `<tr style="border-bottom:1px solid #eee;">
+      <td style="padding:6px 4px;text-align:left;font-weight:600;">${p.name}</td>
+      <td style="padding:6px 4px;text-align:center;color:var(--muted);">${p.team}</td>
+      <td style="padding:6px 4px;text-align:center;font-weight:700;color:var(--grass-dark);">${p.goals}</td>
+      <td style="padding:6px 4px;text-align:center;font-weight:700;color:var(--gold);">${p.assists}</td>
+    </tr>`;
+  });
+  html += "</tbody></table>";
+  container.innerHTML = html;
+}
+
+function renderTransferLog(){
+  const container = document.getElementById("transfer-log-list");
+  if(transferLog.length === 0){
+    container.innerHTML = '<div class="empty">Aún no se han hecho fichajes nuevos (los de la lista original no cuentan aquí)</div>';
+    return;
+  }
+  let html = "";
+  transferLog.slice().reverse().forEach(entry => {
+    const type = entry.type || "fichaje";
+    let line;
+    if(type === "venta"){
+      line = `💰 ${entry.player} vendido por ${entry.team} <span style="color:var(--gold);font-weight:700;">$${entry.price}m</span>`;
+    } else if(type === "canje"){
+      line = `🔄 ${entry.player}: ${entry.fromTeam} → ${entry.team}`;
+    } else {
+      line = `${teamBadge(entry.team)} ${entry.player} → ${entry.team} <span style="color:var(--gold);font-weight:700;">$${entry.price}m</span>`;
+    }
+    html += `<div class="result-row" style="display:flex;justify-content:space-between;align-items:center;padding:6px 2px;border-bottom:1px solid #eee;font-family:Arial,sans-serif;font-size:0.8rem;">
+      <span>${line}</span>
+      <span style="color:var(--muted);font-size:0.7rem;">${entry.time}</span>
+    </div>`;
+  });
+  container.innerHTML = html;
+}
+
+function renderFreeAgentBanner(){
+  const container = document.getElementById("free-agent-banner");
+  const free = PLAYERS.filter(p => !signings[p.id]);
+  if(free.length === 0){
+    container.innerHTML = "";
+    return;
+  }
+  const best = free.slice().sort((a,b) => b.price - a.price)[0];
+  container.innerHTML = `
+    <div class="card" style="background:linear-gradient(135deg, var(--grass-dark), var(--grass));color:var(--line);text-align:center;">
+      <div style="font-family:Arial,sans-serif;font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--gold);margin-bottom:4px;">⭐ Jugador libre destacado</div>
+      <div style="font-family:Georgia,serif;font-size:1.15rem;font-weight:700;">${best.name} · $${best.price}m</div>
+    </div>
+  `;
+}
+
+function renderManagers(){
+  const container = document.getElementById("managers-list");
+  const rows = TEAMS.map(team => {
+    const squad = PLAYERS.filter(p => signings[p.id] && signings[p.id].team === team);
+    const totalGoals = squad.reduce((sum,p) => sum + ((stats[p.id]||{}).goals || 0), 0);
+    const totalAssists = squad.reduce((sum,p) => sum + ((stats[p.id]||{}).assists || 0), 0);
+    const spent = squad
+      .filter(p => !signings[p.id].original)
+      .reduce((sum,p) => sum + p.price, 0);
+    const production = totalGoals + totalAssists;
+    const efficiency = spent > 0 ? (production / spent) : (production > 0 ? Infinity : 0);
+    return {team, totalGoals, totalAssists, production, spent, efficiency};
+  }).sort((a,b) => b.efficiency - a.efficiency || b.production - a.production);
+
+  let html = `<table><thead><tr>
+    <th style="text-align:left">Equipo</th><th>G</th><th>A</th><th>Gastado</th><th>G+A por $m</th>
+  </tr></thead><tbody>`;
+  rows.forEach((r,i) => {
+    const effText = r.spent > 0 ? r.efficiency.toFixed(2) : (r.production > 0 ? "∞" : "-");
+    html += `<tr class="team-row"><td class="team">${teamBadge(r.team)} ${r.team}</td><td>${r.totalGoals}</td><td>${r.totalAssists}</td><td>$${r.spent}m</td><td class="pts">${effText}</td></tr>`;
+  });
+  html += "</tbody></table>";
+  container.innerHTML = html;
+}
+
+function renderDeadlineBanner(){
+  const container = document.getElementById("deadline-banner");
+  if(!deadline){
+    container.innerHTML = "";
+    return;
+  }
+  const closed = isMarketClosed();
+  const dateStr = new Date(deadline).toLocaleString('es-MX', {dateStyle:'medium', timeStyle:'short'});
+  container.innerHTML = `
+    <div class="card" style="background:${closed ? 'var(--danger)' : '#fff3cd'};color:${closed ? '#fff' : '#7a5c00'};text-align:center;font-family:Arial,sans-serif;font-size:0.82rem;">
+      ${closed ? '🔒 Mercado cerrado desde el ' : '⏳ Se cierra el '} ${dateStr}
+    </div>
+  `;
+}
+
+function renderCompareSelects(){
+  ["compare-a","compare-b"].forEach((id, idx) => {
+    const sel = document.getElementById(id);
+    if(sel.options.length > 0) return;
+    PLAYERS.forEach((p, i) => {
+      const opt = document.createElement("option");
+      opt.value = p.id;
+      opt.textContent = p.name + (p.id.startsWith("edgar") ? ` (${p.price}m)` : "");
+      if((idx===0 && i===0) || (idx===1 && i===1)) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  });
+}
+
+function renderCompare(){
+  const idA = document.getElementById("compare-a").value;
+  const idB = document.getElementById("compare-b").value;
+  const container = document.getElementById("compare-result");
+  const a = PLAYERS.find(p => p.id === idA);
+  const b = PLAYERS.find(p => p.id === idB);
+  if(!a || !b){ container.innerHTML = ""; return; }
+  const sa = stats[a.id] || {goals:0, assists:0};
+  const sb = stats[b.id] || {goals:0, assists:0};
+  const teamA = signings[a.id] ? signings[a.id].team : "Sin equipo";
+  const teamB = signings[b.id] ? signings[b.id].team : "Sin equipo";
+  container.innerHTML = `
+    <table class="compare-table"><thead><tr><th>${a.name}</th><th></th><th>${b.name}</th></tr></thead>
+    <tbody>
+      <tr><td>$${a.price}m</td><td style="color:var(--muted);font-size:0.7rem;">Precio</td><td>$${b.price}m</td></tr>
+      <tr><td>${teamA}</td><td style="color:var(--muted);font-size:0.7rem;">Equipo</td><td>${teamB}</td></tr>
+      <tr><td>${sa.goals}</td><td style="color:var(--muted);font-size:0.7rem;">Goles</td><td>${sb.goals}</td></tr>
+      <tr><td>${sa.assists}</td><td style="color:var(--muted);font-size:0.7rem;">Asistencias</td><td>${sb.assists}</td></tr>
+    </tbody></table>
+  `;
+}
+
+function renderFame(){
+  const container = document.getElementById("fame-list");
+  const signedNew = transferLog.filter(e => (e.type || "fichaje") !== "venta");
+  let priciestSigning = null;
+  signedNew.forEach(e => {
+    if(!priciestSigning || e.price > priciestSigning.price) priciestSigning = e;
+  });
+
+  let mostProductive = null, bestValue = null;
+  PLAYERS.forEach(p => {
+    const st = stats[p.id] || {goals:0, assists:0};
+    const production = st.goals + st.assists;
+    if(!mostProductive || production > mostProductive.production){
+      mostProductive = {name: p.name, production};
+    }
+    const signing = signings[p.id];
+    if(signing && !signing.original && p.price > 0){
+      const value = production / p.price;
+      if(!bestValue || value > bestValue.value){
+        bestValue = {name: p.name, value};
+      }
+    }
+  });
+
+  const totalMoved = transferLog.reduce((sum,e) => sum + (e.type === "venta" ? 0 : e.price), 0);
+
+  container.innerHTML = `
+    <div class="fame-box"><div class="fame-label">Fichaje más caro</div><div class="fame-value">${priciestSigning ? priciestSigning.player + " · $" + priciestSigning.price + "m" : "-"}</div></div>
+    <div class="fame-box"><div class="fame-label">Más productivo</div><div class="fame-value">${mostProductive && mostProductive.production > 0 ? mostProductive.name + " · " + mostProductive.production : "-"}</div></div>
+    <div class="fame-box"><div class="fame-label">Mejor relación calidad-precio</div><div class="fame-value">${bestValue ? bestValue.name + " · " + bestValue.value.toFixed(2) : "-"}</div></div>
+    <div class="fame-box"><div class="fame-label">Total movido en el mercado</div><div class="fame-value">$${totalMoved}m</div></div>
+  `;
+}
+
+
+function teamRemaining(team){
+  const spentOnNewSignings = PLAYERS
+    .filter(pl => signings[pl.id] && signings[pl.id].team === team && !signings[pl.id].original)
+    .reduce((sum,pl) => sum + pl.price, 0);
+  return BUDGET - spentOnNewSignings;
+}
+
+function renderAll(){
+  renderPlayers();
+  renderSquads();
+  renderScorers();
+  renderTransferLog();
+  renderFreeAgentBanner();
+  renderManagers();
+  renderDeadlineBanner();
+  renderCompare();
+  renderFame();
+}
+
+document.getElementById("sort-select").addEventListener("change", renderPlayers);
+document.getElementById("search-input").addEventListener("input", renderPlayers);
+document.getElementById("compare-a").addEventListener("change", renderCompare);
+document.getElementById("compare-b").addEventListener("change", renderCompare);
+
+document.getElementById("save-deadline").addEventListener("click", async () => {
+  const val = document.getElementById("deadline-input").value;
+  if(!val){
+    alert("Elige una fecha y hora primero");
+    return;
+  }
+  deadline = new Date(val).toISOString();
+  await saveDeadline();
+  renderAll();
+});
+
+document.getElementById("clear-deadline").addEventListener("click", async () => {
+  deadline = null;
+  document.getElementById("deadline-input").value = "";
+  await saveDeadline();
+  renderAll();
+});
+
+document.getElementById("refresh-btn").addEventListener("click", async () => {
+  await load();
+  await loadStats();
+  await loadTransferLog();
+  await loadClauses();
+  await loadDeadline();
+  renderAll();
+});
+
+document.getElementById("reset-btn").addEventListener("click", async () => {
+  if(confirm("¿Reiniciar el mercado con los fichajes originales y poner goles/asistencias en 0? Esto también borra el historial de transferencias, las cláusulas y la fecha límite.")){
+    signings = buildDefaultSignings();
+    stats = buildDefaultStats();
+    transferLog = [];
+    clauses = {};
+    deadline = null;
+    await save();
+    await saveStats();
+    await saveTransferLog();
+    await saveClauses();
+    await saveDeadline();
+    document.getElementById("deadline-input").value = "";
+    renderAll();
+  }
+});
+
+(async function init(){
+  renderCompareSelects();
+  await load();
+  await loadStats();
+  await loadTransferLog();
+  await loadClauses();
+  await loadDeadline();
+  renderAll();
+})();
+</script>
+</body>
+</html>
